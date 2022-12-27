@@ -1,0 +1,13 @@
+// print two digit is a multiple of 7
+#include<stdio.h>
+int main(){
+    int i,j,sum;
+   // printf("enter the value of a and b:\n");
+    //scanf("%d %d",&a,&b);
+    for(i=0;i<=7;i++){
+    for(j=7;j>0;--j){
+    sum=i+j;
+    printf("%d+%d=%d\n",i,j,i+j);
+    }
+}
+}

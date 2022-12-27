@@ -1,0 +1,13 @@
+// alphabet pattern
+
+#include <stdio.h>
+
+int main(){
+ char i;
+ //printf("enter the value of n:\n");
+// scanf("%d",&n);
+ for(i=65;i<91;i++){
+     
+     printf("%c",i);
+ }
+ }

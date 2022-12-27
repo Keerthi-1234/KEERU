@@ -1,0 +1,19 @@
+
+// discount problem
+#include <stdio.h>
+
+int main() {
+int p1,p2,p3,q,t;
+printf("enter the value for price:\n");
+scanf("%d %d %d",&p1,&p2,&p3);
+printf("enter the value for quantity:\n");
+scanf("%d",&q);
+t=p1+p2+p3;
+printf("%d\n",t);
+if(t<1000)
+printf("discount is 5%:\n");
+else if(t>1000&&t<5000)
+printf("discount is 10%:\n");
+else if(t>5000)
+printf("discount is 15%:\n");
+}

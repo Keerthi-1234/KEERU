@@ -1,0 +1,175 @@
+#include <lpc214x.h>
+#define RS   (1<<10)
+#define RW   (1<<12)
+#define EN   (1<<13)
+#define LCD_DATA  (0xFF<<16)
+#define FULL_CAPACITY 1000
+#define CUT_OFF_MAX 800
+#define CUT_OFF_FULL 500
+#define CUT_OFF_EMERGENCY 300
+#define PIN_1 (1<<1)
+#define LED_G 0xC0
+#define LED_Y 0xA0
+#define LED_R 0x90
+#define LED_CLEAR 0x70
+#define BUZZER (1<<15)
+#define ADC_0_4 ((1<<18)|(0<<19))
+
+void LCD_display(char *);
+void LCD_data(unsigned char a);
+void LCD_command (unsigned char a);
+
+void delay(int count)
+	{
+		int i,j;
+		for(i =0;i < count;i++)
+			for(j = 0;j < 5000;j++);
+	}
+void LCD_init(void)
+{
+	IODIR0 |= EN|RS|RW|LCD_DATA;
+	//LCD_command(0x02);		//reset the lcd display
+	LCD_command(0X38); 		//intializes the 16x2 ,5x7 LCD matrix  8-bit mode
+	LCD_command(0X0F); 		//  display on cursor blinking
+  	LCD_command(0X01); 		//clear screen ,cursor home
+	LCD_command(0X80);		//Start with first line
+ }
+void LCD_display(char *str)
+{
+	while(*str)
+	{
+		{
+			LCD_data(*str);
+		}
+		str++;
+		delay(50);
+	}
+}
+void LCD_data(unsigned char a)	 
+{
+	IOPIN0 = a << 16;
+	IOCLR0 = RW;
+	IOSET0 = RS;  //RS=1 for data
+	IOSET0 |= EN;
+	delay(100);
+	IOCLR0 = EN;
+	delay(100);
+ }
+
+void LCD_command (unsigned char a)
+{
+	IOPIN0 = a<<16;
+	IOCLR0 = RS;	//RS should be 0 for command
+	IOCLR0 |= RW;
+	IOSET0 = EN;
+	delay(100);
+	IOCLR0 = EN;
+	delay(100);
+}
+ 
+void display(int a)
+{
+   //LCD_command(0x01);
+   //LCD_command(0xC0);
+	if(a != 0)
+	{
+		display(a/10);
+		LCD_data(a%10 + 48);
+	}
+}
+
+int main()
+{
+    int res;
+	IO0DIR |= 0xF0;
+	LCD_init();
+    //LCD_display("FUEL LEVEL");
+	delay(500);
+
+	PINSEL1= ADC_0_4;   //P0.25 as AD0.4
+
+	AD0CR = 0x00200310;  //LDR
+	
+		while(1)
+		{	
+			if(IO0PIN & PIN_1)
+			{		
+				LCD_command(0X80);
+				AD0CR = AD0CR | (1<<24); /* Start Conversion */
+				//while ( !(AD0DR1 & 0x80000000) ); /* Wait till DONE */
+   	 			//res = AD0DR1;
+				while ( !(AD0GDR & 0x80000000) ); /* Wait till DONE */
+	     		res = AD0GDR;
+				res = (res>>6);
+		    	res = (res & 0x000003FF);	
+				if ((res > CUT_OFF_MAX) && (res < FULL_CAPACITY))
+				{
+					LCD_command(0x01);
+					IO0CLR |= 0xF0;
+					delay(1000);
+				}
+					
+				if ((res > CUT_OFF_MAX) && (res < FULL_CAPACITY))
+				{
+					LCD_display("IGNITION ON");
+					LCD_command(0x01);
+					LCD_display("FUEL LEVEL -FULL");
+					LCD_command(0xC0);
+					display(res);
+					IO0SET |= LED_G;
+					delay(1000);
+				}
+		
+			else if ((res > CUT_OFF_FULL) && (res <CUT_OFF_MAX))
+			{
+				LCD_display("IGNITION ON");
+				LCD_command(0x01);
+				LCD_display("FUEL LEVEL - MAX");
+				LCD_command(0xC0);
+				display(res);
+				IO0CLR |= LED_CLEAR;
+				IO0SET |= LED_Y;
+				delay(1000);
+			}
+
+			else if ((res < CUT_OFF_FULL) && (res >CUT_OFF_EMERGENCY))
+			{
+				LCD_display("IGNITION ON");
+				LCD_command(0x01);
+				LCD_display("FUELLEVEL-RESERVE");
+				LCD_command(0xC0);
+				display(res);
+				IO0CLR |= LED_CLEAR;
+				IO0SET |= LED_R;
+				delay(1000);
+			}
+
+	
+			else if (res < CUT_OFF_EMERGENCY)
+			{
+				LCD_display("IGNITION ON");
+				LCD_command(0x01);
+				LCD_display("FUEL LEVEL - EMPTY");
+				LCD_command(0xC0);
+				display(res);
+				IO0CLR |= LED_CLEAR;
+				IO0DIR |= BUZZER;
+				IO0SET |= BUZZER;
+				delay(1000);
+				IO0CLR |= BUZZER;
+				IO0CLR |= LED_CLEAR;
+				delay(1000);
+			}
+			delay(1000);
+		}
+
+		else 
+		{
+			LCD_display("Ignition off");
+			delay(1000);
+			LCD_command(0x01);
+		}
+	}
+	
+}
+

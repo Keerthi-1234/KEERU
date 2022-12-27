@@ -1,0 +1,12 @@
+//mean variance and sd
+#include<stdio.h>
+int main(){
+    int n,x,v,i,sd,xi=100;
+    printf("enter the value of set:\n");
+    scanf("%d",&n);
+    printf("enter the value of mean:\n");
+    scanf("%d",&x);
+    v=((xi-x)^2)/n-1;
+    sd=sqrt(v);
+    printf("%d %d",v,sd);
+}

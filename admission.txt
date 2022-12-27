@@ -1,0 +1,21 @@
+// admission program
+#include <stdio.h>
+
+int main() {
+ 
+   
+   
+int i,rank,age;
+
+  printf("enter the age:\n");
+  scanf("%d",&age);
+  printf("enter the rank:\n");
+  scanf("%d",&rank);
+  if(age>=18&&age<=20&&rank>=2000&&rank<=4000)
+{
+   printf("admission sucessfull:\n");
+}
+else{
+   printf("admission denied:\n");
+}
+}
